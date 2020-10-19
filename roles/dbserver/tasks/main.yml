@@ -1,0 +1,17 @@
+---
+# tasks file for dbserver
+
+- name: Install MariaDB latest
+  yum:
+    name: mariadb-server
+    state: latest
+
+- name: Start MariaDB at boot
+  service:
+    name: mariadb
+    enabled: yes
+    state: started
+
+- name: Set timezone to Europe/Stockholm.
+  timezone:
+    name: Europe/Stockholm

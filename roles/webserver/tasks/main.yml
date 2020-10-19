@@ -1,0 +1,51 @@
+---
+# tasks file for webserver
+#
+- name: install latest apache
+  yum:
+    name: httpd
+    state: latest
+  notify:
+    - Restart Apache
+
+- name: Set timezone to Europe/Stockholm.
+  timezone:
+    name: Europe/Stockholm
+
+
+- name: Define a vhost and copy vhost config template with listener directive to webserver
+  template:
+    src: "my_vhost.conf.j2"
+    dest: "/etc/httpd/conf.d/my_vhost.conf"
+  notify: 
+    - Restart Apache
+
+- name: create folder for website
+  file:
+    path: /var/www/hundraprocent.org
+    owner: apache
+    group: apache
+    state: directory
+
+- name: copy index.html
+  copy:
+    src: "files/index.html"
+    dest: "/var/www/hundraprocent.org/index.html"
+
+- name: install python/security dependencies 
+  package: 
+    name: "{{ item }}"
+    state: present
+  loop:
+    - mod_security
+    - mod_ssl
+    - mod_wsgi
+    - mod_ldap
+    - mod_auth_kerb
+    - mod_auth_gssapi
+
+- name: start apache at boot
+  service:
+    name: httpd
+    enabled: yes
+    state: started
