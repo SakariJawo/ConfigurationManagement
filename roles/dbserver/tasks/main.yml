@@ -1,10 +1,19 @@
 ---
 # tasks file for dbserver
 
+- name: Set timezone to Europe/Stockholm.
+  timezone:
+    name: Europe/Stockholm
+
 - name: Install MariaDB latest
   yum:
     name: mariadb-server
     state: latest
+
+- name: Install MySQL-python
+  yum:
+    name: MySQL-python
+    state: present
 
 - name: Start MariaDB at boot
   service:
@@ -12,6 +21,20 @@
     enabled: yes
     state: started
 
-- name: Set timezone to Europe/Stockholm.
-  timezone:
-    name: Europe/Stockholm
+- name: Create a database instance
+  mysql_db:
+    name: "{{ dbname }}"
+    state: present
+
+- name: Create user and get set encrypted password to database
+  community.mysql.mysql_user:
+    name: "{{ username }}"
+    host:  "{{ hostvars['webserver'].ansible_default_ipv4.address }}"
+    password: "{{ password }}"
+    priv: '*.*:ALL'
+    state: present
+  notify:
+    - Copy webbapp.sql to dbserver
+    - Run sql file
+    - Delete file webbapp.sql
+

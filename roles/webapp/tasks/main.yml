@@ -1,0 +1,77 @@
+---
+# tasks file for webapp
+#
+#- name: Import EPEL GPG key.
+#  rpm_key:
+#    key: "{{ epel_repo_gpg_key_url }}"
+#    state: present
+
+- name: Install EPEL repo.
+  yum: 
+    name: http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    state: present
+
+- name: Install packages for webapp
+  yum:
+    name: "{{ packages }}" 
+    state: present
+  vars:
+    packages:
+    - "@Development tools"
+    - "perl"
+    - "perl-App*"
+    - "perl-DBD*"
+    - "perl-Template*"
+    - "perl-YAML*"
+    - "perl-Capture-Tiny*"
+
+- name: Install Dancer perl package without running the unit tests in indicated locallib
+  community.general.cpanm:
+    name: Dancer
+
+- name: install git and clone repo on first run
+  yum:
+    name: git
+    state: latest
+    #  notify:
+          #    - clone webapp git reprsitory
+ 
+- name: clone webapp git repository
+  git:
+    repo: https://github.com/initab/demoapp.git
+    dest: /var/www/demo
+    update: no  
+
+- name: Insert configuration to production
+  blockinfile:
+    path: /var/www/demo/environments/production.yml
+    block: |
+      dbconnect: dbi:mysql:database=webappdb;host={{ hostvars['dbserver'].ansible_default_ipv4.address }}
+      dbuser: webappuser
+      dbpass: "{{ password }}"
+
+- name: Define a vhost and copy vhost config template with listener directive to webserver
+  template:
+    src: "vhost.conf.j2"
+    dest: "/etc/httpd/conf.d/vhost.conf"
+  notify:
+    - Restart Apache
+
+- name: Set httpd_can_network_connect flag on and keep it persistent across reboots
+  ansible.posix.seboolean:
+    name: httpd_can_network_connect
+    state: yes
+    persistent: yes
+
+- name: copy demod.service to webserver
+  copy:
+    src: "demod.service"
+    dest: "/etc/systemd/system/demod.service"
+ 
+
+- name: start demod
+  ansible.builtin.service:
+    name: demod
+    state: restarted
+
+

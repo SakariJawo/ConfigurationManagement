@@ -1,2 +1,16 @@
 ---
 # handlers file for dbserver
+
+- name: Copy webbapp.sql to dbserver
+  copy:
+    src: "files/webbapp.sql"
+    dest: "/tmp/webbapp.sql"
+
+- name: Run sql file
+  shell: "mysql webappdb < /tmp/webbapp.sql"
+  become: true
+
+- name: Delete file webbapp.sql
+  file:
+    path: /tmp/webbapp.sql
+    state: absent

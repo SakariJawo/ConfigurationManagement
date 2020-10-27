@@ -1,0 +1,11 @@
+- hosts: gitServer
+  tasks:
+  - name: Installing git on gitServer
+    package:
+      name: git
+      state: present
+      
+  - name: create git user
+    user:
+      name: git
+          

@@ -27,11 +27,18 @@
     group: apache
     state: directory
 
+- name: create folder for website
+  file:
+    path: /var/www/demo
+    owner: apache
+    group: apache
+    state: directory
+
 - name: copy index.html
   copy:
     src: "files/index.html"
     dest: "/var/www/hundraprocent.org/index.html"
-
+ 
 - name: install python/security dependencies 
   package: 
     name: "{{ item }}"
