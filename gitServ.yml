@@ -1,3 +1,4 @@
+---
 - hosts: gitServer
   tasks:
   - name: Installing git on gitServer
@@ -8,4 +9,17 @@
   - name: create git user
     user:
       name: git
-          
+  
+  - name: create ssh directory
+    file:
+      path: /home/git/.ssh
+      state: directory
+  - name: add Keys to git server
+    authorized_key:
+      user: root
+      state: present
+      key: "{{ lookup('file','/home/jukka/.ssh/{{ item }}_git_key.pub') }}"
+    loop: 
+      - jukka
+      - tero
+      - markus
